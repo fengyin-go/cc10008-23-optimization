@@ -4,7 +4,7 @@ import type { EntryRow } from './types'
 // 本地持久化：数据放在 localStorage 里，刷新、关掉再打开都还在。
 const STORAGE_KEY = 'interactive-analytics-lab:entries'
 
-function clone<T>(value: T): T {
+export function clone<T>(value: T): T {
   return JSON.parse(JSON.stringify(value)) as T
 }
 
@@ -56,4 +56,27 @@ export function resetRows(key: string): EntryRow[] {
 
 export function storageKey(): string {
   return STORAGE_KEY
+}
+
+/** 筛选引擎等派生状态共用的 JSON 读写：读失败时回落到默认值，不让局部损坏带崩整页。 */
+export function readJson<T>(key: string, fallback: T): T {
+  if (typeof window === 'undefined' || !window.localStorage) {
+    return fallback
+  }
+  const raw = window.localStorage.getItem(key)
+  if (raw === null) {
+    return fallback
+  }
+  try {
+    return JSON.parse(raw) as T
+  } catch {
+    return fallback
+  }
+}
+
+export function writeJson(key: string, value: unknown): void {
+  if (typeof window === 'undefined' || !window.localStorage) {
+    return
+  }
+  window.localStorage.setItem(key, JSON.stringify(value))
 }

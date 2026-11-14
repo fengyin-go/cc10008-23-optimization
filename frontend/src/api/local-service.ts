@@ -1,3 +1,4 @@
+import { getFilterSnapshot } from '@/api/filter-service'
 import { MODULE_BY_KEY } from '@/data/modules'
 import { allRows, listRows, resetRows, saveRows } from '@/data/local-store'
 import type { ActionResult, EntryRow, ModuleMeta, OverviewResult, PageResult } from '@/data/types'
@@ -86,7 +87,19 @@ export function downloadEntries(key: string): void {
 
 export function loadOverview(): OverviewResult {
   const rows = allRows()
+  const engine = getFilterSnapshot()
   const modules = [...MODULE_BY_KEY.values()].map((meta) => {
+    // 数据筛选模块已由筛选引擎接管：概览统计规则本身，而不是登记样例行。
+    if (meta.key === 'filter') {
+      return {
+        name: meta.name,
+        created: engine.rules.length,
+        pending: engine.rules.filter(
+          (rule) => rule.needsRevalidation || rule.status === 'draft' || rule.status === 'validated',
+        ).length,
+        abnormal: engine.rules.filter((rule) => rule.status === 'disabled').length,
+      }
+    }
     const entries = rows[meta.key] ?? []
     return {
       name: meta.name,

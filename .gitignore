@@ -81,6 +81,7 @@ Thumbs.db
 desktop.ini
 
 # ===== 运行期本地文件 =====
+.check-filter.mjs
 *.sqlite3
 *.db
 *.pid
